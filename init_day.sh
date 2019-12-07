@@ -15,8 +15,8 @@ def main(inp):
 
 
 class Test$day(unittest.TestCase):
-  def test_runs(self):
-    main('')
+  def test_example(self):
+    self.assertEqual('', main(''))
 
 
 if __name__ == '__main__':
