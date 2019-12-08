@@ -22,7 +22,7 @@ class Test$day(unittest.TestCase):
 if __name__ == '__main__':
   with open('$day.txt', 'r') as f:
     contents = f.read()
-  print(main(contents))"
+  print(main(contents.strip()))"
 
 echo "$tpl" > "${day}a.py"
 echo "$tpl" > "${day}b.py"
