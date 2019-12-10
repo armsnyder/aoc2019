@@ -37,8 +37,8 @@ class IntcodeComputer:
       {'opcode': 4, 'params': 1, 'fn': lambda args: args['output'](1)},
       {'opcode': 5, 'params': 2, 'fn': lambda args: args['jump'](args['read'](2)) if args['read'](1) != 0 else None},
       {'opcode': 6, 'params': 2, 'fn': lambda args: args['jump'](args['read'](2)) if args['read'](1) == 0 else None},
-      {'opcode': 7, 'params': 3, 'fn': lambda args: args['write_abs'](args['read_immediate'](3), 1) if args['read'](1) < args['read'](2) else args['write_abs'](args['read_immediate'](3), 0)},
-      {'opcode': 8, 'params': 3, 'fn': lambda args: args['write_abs'](args['read_immediate'](3), 1) if args['read'](1) == args['read'](2) else args['write_abs'](args['read_immediate'](3), 0)}
+      {'opcode': 7, 'params': 3, 'fn': lambda args: args['write'](3, 1) if args['read'](1) < args['read'](2) else args['write'](3, 0)},
+      {'opcode': 8, 'params': 3, 'fn': lambda args: args['write'](3, 1) if args['read'](1) == args['read'](2) else args['write'](3, 0)}
     ]
     while True:
       opcode = self.data[self.index] % 100
@@ -55,12 +55,8 @@ class IntcodeComputer:
           return self.data[self.data[self.index+pos]]
         else:
           return self.data[self.index+pos]
-      def read_immediate(pos):
-        return self.data[self.index+pos]
       def write(pos, value):
         self.data[self.data[self.index+pos]] = value
-      def write_abs(pos, value):
-        self.data[pos] = value
       def output(pos):
         nonlocal this_output
         if modes[pos-1] == 0:
@@ -73,7 +69,7 @@ class IntcodeComputer:
         self.index = pos
       def get_next_input():
         return self.input_queue.pop(0)
-      rule['fn']({'halt': halt, 'read': read, 'write': write, 'input': get_next_input, 'output': output, 'jump': jump, 'read_immediate': read_immediate, 'write_abs': write_abs})
+      rule['fn']({'halt': halt, 'read': read, 'write': write, 'input': get_next_input, 'output': output, 'jump': jump})
       if is_halt:
         return None
       if not is_jump:

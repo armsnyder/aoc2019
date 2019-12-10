@@ -13,8 +13,8 @@ def main(inp):
       {'opcode': 4, 'params': 1, 'fn': lambda args: args['output'](1)},
       {'opcode': 5, 'params': 2, 'fn': lambda args: args['jump'](args['read'](2)) if args['read'](1) != 0 else None},
       {'opcode': 6, 'params': 2, 'fn': lambda args: args['jump'](args['read'](2)) if args['read'](1) == 0 else None},
-      {'opcode': 7, 'params': 3, 'fn': lambda args: args['write_abs'](args['read_immediate'](3), 1) if args['read'](1) < args['read'](2) else args['write_abs'](args['read_immediate'](3), 0)},
-      {'opcode': 8, 'params': 3, 'fn': lambda args: args['write_abs'](args['read_immediate'](3), 1) if args['read'](1) == args['read'](2) else args['write_abs'](args['read_immediate'](3), 0)}
+      {'opcode': 7, 'params': 3, 'fn': lambda args: args['write'](3, 1) if args['read'](1) < args['read'](2) else args['write'](3, 0)},
+      {'opcode': 8, 'params': 3, 'fn': lambda args: args['write'](3, 1) if args['read'](1) == args['read'](2) else args['write'](3, 0)}
     ]
     data = [int(x) for x in program.split(',')]
     i = 0
@@ -34,14 +34,9 @@ def main(inp):
           return data[data[i+pos]]
         else:
           return data[i+pos]
-      def read_immediate(pos):
-        return data[i+pos]
       def write(pos, value):
         nonlocal data
         data[data[i+pos]] = value
-      def write_abs(pos, value):
-        nonlocal data
-        data[pos] = value
       def output(pos):
         nonlocal last_output
         if modes[pos-1] == 0:
@@ -57,7 +52,7 @@ def main(inp):
         next_input = inputs[input_index]
         input_index += 1
         return next_input
-      rule['fn']({'halt': halt, 'read': read, 'write': write, 'input': get_next_input, 'output': output, 'jump': jump, 'read_immediate': read_immediate, 'write_abs': write_abs})
+      rule['fn']({'halt': halt, 'read': read, 'write': write, 'input': get_next_input, 'output': output, 'jump': jump})
       if is_halt:
         break
       if not is_jump:
