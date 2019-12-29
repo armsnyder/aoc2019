@@ -1,6 +1,6 @@
 # ref: https://adventofcode.com/2019/day/20
 import unittest
-from typing import Tuple, List, Dict, Optional, Generator
+from typing import Tuple, List, Dict, Optional, Generator, Callable, TypeVar
 
 
 Cell = Tuple[int, int, int]
@@ -71,16 +71,18 @@ class Maze:
     return cells
 
 
-def main(inp: str) -> int:
-  maze = Maze(inp)
-  def search(start: Cell, my_visited: Dict[Cell, int], their_visited: Dict[Cell, int]) -> Generator[int, None, None]:
-    queue: List[Tuple[Cell, int]] = [(start, 0)]
+T = TypeVar('T')
+
+
+def bidirectional_bfs(start: T, end: T, get_adjacent_cells: Callable[[T], List[T]]) -> int:
+  def search(root: T, my_visited: Dict[T, int], their_visited: Dict[T, int]) -> Generator[int, None, None]:
+    queue: List[Tuple[T, int]] = [(root, 0)]
     while len(queue) > 0:
       cell, dist = queue.pop(0)
       if cell in my_visited:
         continue
       my_visited[cell] = dist
-      queue.extend((c, dist+1) for c in maze.get_adjacent_cells(cell))
+      queue.extend((c, dist+1) for c in get_adjacent_cells(cell))
       yield dist + their_visited[cell] if cell in their_visited else None
   def race(gen_a: Generator[Optional[int], None, None], gen_b: Generator[Optional[int], None, None]) -> int:
     while True:
@@ -88,10 +90,14 @@ def main(inp: str) -> int:
         value = next(gen)
         if value is not None:
           return value
-  visited_a: Dict[Cell, int] = {}
-  visited_b: Dict[Cell, int] = {}
-  # Find the minimum path length by performing a bi-directional breadth-first-search:
-  return race(search(maze.start_cell, visited_a, visited_b), search(maze.end_cell, visited_b, visited_a))
+  visited_a: Dict[T, int] = {}
+  visited_b: Dict[T, int] = {}
+  return race(search(start, visited_a, visited_b), search(end, visited_b, visited_a))
+
+
+def main(inp: str) -> int:
+  maze = Maze(inp)
+  return bidirectional_bfs(maze.start_cell, maze.end_cell, maze.get_adjacent_cells)
 
 
 class Test20(unittest.TestCase):
