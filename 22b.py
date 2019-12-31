@@ -8,12 +8,16 @@ ScaleShift = Tuple[int, int]
 
 def locate_card_after_shuffle(directions: str, total_cards: int, card_index_to_return: int,
                               shuffle_iterations: int) -> int:
-  scale, shift = combine_directions_into_single_operation(directions)
-  invscale = modinv(scale, total_cards)
-  result = card_index_to_return
-  for i in range(shuffle_iterations):
-    result = invscale * (result - shift) % total_cards
-  return result
+  scale, shift = operation_power(combine_directions_into_single_operation(directions), shuffle_iterations)
+  return modinv(scale, total_cards) * (card_index_to_return - shift) % total_cards
+
+
+def operation_power(operation: ScaleShift, n: int) -> ScaleShift:
+  scale, shift = operation
+  if scale != 1:
+    return scale ** n, shift * (1 - scale ** n) / (1 - scale)  # Sum of a geometric series
+  else:
+    return combine_operations([operation] * n)
 
 
 def combine_directions_into_single_operation(directions: str) -> ScaleShift:
@@ -29,13 +33,14 @@ def combine_directions_into_single_operation(directions: str) -> ScaleShift:
       return int(direction_text[len(key_deal_with_increment):]), 0
     raise ValueError(direction_text)
 
-  def combine_operations(scale_shifts: List[ScaleShift]) -> ScaleShift:
-    result = scale_shifts[0]
-    for next_op in scale_shifts[1:]:
-      result = result[0] * next_op[0], next_op[0] * result[1] + next_op[1]
-    return result
-
   return combine_operations([parse_direction(x) for x in directions.split('\n')])
+
+
+def combine_operations(scale_shifts: List[ScaleShift]) -> ScaleShift:
+  result = scale_shifts[0]
+  for next_op in scale_shifts[1:]:
+    result = result[0] * next_op[0], next_op[0] * result[1] + next_op[1]
+  return result
 
 
 def modinv(a, m):
