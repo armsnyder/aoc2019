@@ -1,45 +1,56 @@
 # ref: https://adventofcode.com/2019/day/22
 import unittest
-from typing import List, Callable
-
+from typing import List, Tuple
 
 Deck = List[int]
+ScaleShift = Tuple[int, int]
 
 
-def locate_card_after_shuffle(directions: str, total_cards: int, card_index_to_return: int, shuffle_iterations: int) -> int:
-  def parse_into_transform_function(direction_text: str) -> Callable[[int], int]:
+def locate_card_after_shuffle(directions: str, total_cards: int, card_index_to_return: int,
+                              shuffle_iterations: int) -> int:
+  scale, shift = combine_directions_into_single_operation(directions)
+  invscale = modinv(scale, total_cards)
+  result = card_index_to_return
+  for i in range(shuffle_iterations):
+    result = invscale * (result - shift) % total_cards
+  return result
+
+
+def combine_directions_into_single_operation(directions: str) -> ScaleShift:
+  def parse_direction(direction_text: str) -> ScaleShift:
     key_deal_with_increment = 'deal with increment '
     key_cut = 'cut '
     key_deal_into_new_stack = 'deal into new stack'
+    if direction_text.startswith(key_cut):
+      return 1, -int(direction_text[len(key_cut):])
+    if direction_text == key_deal_into_new_stack:
+      return -1, -1
     if direction_text.startswith(key_deal_with_increment):
-      def egcd(a, b):
-        if a == 0:
-          return b, 0, 1
-        else:
-          g, y, x = egcd(b % a, a)
-          return g, x - (b // a) * y, y
-      def modinv(a, m):
-        g, x, y = egcd(a, m)
-        if g != 1:
-          raise Exception('modular inverse does not exist')
-        else:
-          return x % m
-      increment = int(direction_text[len(key_deal_with_increment):])
-      special_k = modinv(total_cards, increment)
-      return lambda x: (-x * special_k % increment * total_cards + x) // increment
-    elif direction_text.startswith(key_cut):
-      increment = int(direction_text[len(key_cut):])
-      return lambda x: (x + increment) % total_cards
-    elif direction_text == key_deal_into_new_stack:
-      return lambda x: total_cards - x - 1
+      return int(direction_text[len(key_deal_with_increment):]), 0
+    raise ValueError(direction_text)
+
+  def combine_operations(scale_shifts: List[ScaleShift]) -> ScaleShift:
+    result = scale_shifts[0]
+    for next_op in scale_shifts[1:]:
+      result = result[0] * next_op[0], next_op[0] * result[1] + next_op[1]
+    return result
+
+  return combine_operations([parse_direction(x) for x in directions.split('\n')])
+
+
+def modinv(a, m):
+  def egcd(a, b):
+    if a == 0:
+      return b, 0, 1
     else:
-      raise ValueError(direction_text)
-  transform_functions = list(reversed([parse_into_transform_function(d) for d in directions.split('\n')]))
-  result = card_index_to_return
-  for i in range(shuffle_iterations):
-    for transform in transform_functions:
-      result = transform(result)
-  return result
+      g, y, x = egcd(b % a, a)
+      return g, x - (b // a) * y, y
+
+  g, x, y = egcd(a % m, m)
+  if g != 1:
+    raise Exception(f'modular inverse of {a} (mod {m}) does not exist')
+  else:
+    return x % m
 
 
 class Test22(unittest.TestCase):
