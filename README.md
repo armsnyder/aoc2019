@@ -1,5 +1,7 @@
 # Advent of Code 2019 Solutions \[Complete]
 
+Solutions to the coding puzzles here: https://adventofcode.com/2019
+
 The use of intcode programs as puzzle inputs was very enjoyable and made for some very creative puzzles this year.
 
 ## Notable Problems
