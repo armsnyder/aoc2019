@@ -2,36 +2,21 @@
 import unittest
 
 
-def gen_pattern(factor, total_length):
-  base_pattern = [0, 1, 0, -1]
-  index = 0
-  remaining_yields = factor - 1
-  for _ in range(total_length):
-    if remaining_yields == 0:
-      index = (index + 1) % len(base_pattern)
-      remaining_yields = factor
-    yield base_pattern[index]
-    remaining_yields -= 1
-
-
 def main(input_signal: str, total_phases: int) -> str:
-  offset = int(input_signal[:8])
-  input_signal = input_signal * 10000
-  def calculate_digit(pattern_generator, signal):
-    return str(sum(a*int(b) for a, b in zip(pattern_generator, signal)))[-1:]
+  offset = int(input_signal[:7])
+  meaningful_length = len(input_signal) * 10000 - offset
+  meaningful_input_signal = input_signal[-(meaningful_length % len(input_signal)):] + input_signal * (
+      meaningful_length // len(input_signal))
+  working_signal = [int(x) for x in meaningful_input_signal]
   for _ in range(total_phases):
-    pattern_generators = [gen_pattern(factor, len(input_signal)) for factor in range(1, len(input_signal)+1)]
-    input_signal = ''.join(calculate_digit(pg, input_signal) for pg in pattern_generators)
-  return input_signal[offset:offset+8]
+    for i in reversed(range(meaningful_length - 1)):
+      working_signal[i] += working_signal[i + 1]
+    for i in range(meaningful_length):
+      working_signal[i] %= 10
+  return ''.join(str(x) for x in working_signal[:8])
 
 
 class Test16(unittest.TestCase):
-  def test_gen_pattern_1(self):
-    self.assertEqual([1, 0, -1, 0, 1, 0, -1, 0], list(gen_pattern(1, 8)))
-
-  def test_gen_pattern_2(self):
-    self.assertEqual([0, 1, 1, 0, 0, -1, -1, 0], list(gen_pattern(2, 8)))
-
   def test_example_1(self):
     self.assertEqual('84462026', main('03036732577212944063491565474664', 100))
 
